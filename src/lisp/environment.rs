@@ -6,12 +6,12 @@ use lisp::ExecutionTreeObject;
 use lisp::Frame;
 use lisp::Symbol;
 
-pub struct Environment {
-    call_stack: Vec<Frame>,
-    global_frame: Frame,
+pub struct Environment<TArg> {
+    call_stack: Vec<Frame<TArg>>,
+    global_frame: Frame<TArg>,
 }
 
-impl Environment {
+impl <TArg> Environment<TArg> {
     pub fn new() -> Self {
         Environment {
             call_stack: Vec::new(),
@@ -19,13 +19,13 @@ impl Environment {
         }
     }
 
-    pub fn execute(&mut self, execution_tree: ExecutionTree) -> R<String> {
+    pub fn execute(&mut self, arg: TArg, execution_tree: ExecutionTree) -> R<String> {
         let execution_tree_root = execution_tree.into_root();
-        let result = try!(self.evaluate_node(execution_tree_root));
+        let result = try!(self.evaluate_node(arg, execution_tree_root));
         result.to_string()
     }
 
-    pub fn get_current_frame(&mut self) -> R<&mut Frame> {
+    pub fn get_current_frame(&mut self) -> R<&mut Frame<TArg>> {
         let index_of_last = self.call_stack.len() - 1;
         match self.call_stack.get_mut(index_of_last) {
             Some(some) => Ok(some),
@@ -33,7 +33,7 @@ impl Environment {
         }
     }
 
-    pub fn parse_and_execute(&mut self, source: &str) -> R<String> {
+    pub fn parse_and_execute(&mut self, arg: TArg, source: &str) -> R<String> {
         let ast = AbstractSyntaxTree::new(source);
         {
             try!(ast.initialize());
@@ -41,17 +41,17 @@ impl Environment {
 
         let execution_tree = try!(ExecutionTree::new(&ast));
 
-        self.execute(execution_tree)
+        self.execute(arg, execution_tree)
     }
 
-    fn evaluate(&mut self, object: ExecutionTreeObject, rest: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
+    fn evaluate(&mut self, arg: TArg, object: ExecutionTreeObject, rest: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
         self.call_stack.push(Frame::new());
 
         let result =
             match object {
                 ExecutionTreeObject::Node(some) => {
                     if rest.len() == 0 {
-                        self.evaluate_node(some)
+                        self.evaluate_node(arg, some)
                     } else {
                         panic!()
                     }
@@ -59,16 +59,16 @@ impl Environment {
                 ExecutionTreeObject::Symbol(some) => {
                     let symbol = try!(self.global_frame.get(&some));
                     match symbol {
-                        Symbol::Object(some) => self.evaluate(some, rest),
+                        Symbol::Object(some) => self.evaluate(arg, some, rest),
                         Symbol::BuiltInFuncNone(some) => {
                             if rest.len() == 0 {
-                                let result = some(self);
+                                let result = some(arg, self);
                                 Ok(result)
                             } else {
                                 panic!()
                             }
                         },
-                        Symbol::BuiltInFuncInput(some) => Ok(some(self, rest)),
+                        Symbol::BuiltInFuncInput(some) => Ok(some(arg, self, rest)),
                     }
                 },
                 other => {
@@ -84,7 +84,7 @@ impl Environment {
         result
     }
 
-    fn evaluate_node(&mut self, node: ExecutionTreeNode) -> R<ExecutionTreeObject> {
+    fn evaluate_node(&mut self, arg: TArg, node: ExecutionTreeNode) -> R<ExecutionTreeObject> {
         let objects = node.into_objects();
 
         if objects.len() == 0 {
@@ -97,7 +97,7 @@ impl Environment {
                     Some(some) => some,
                     None => panic!(),
                 };
-            self.evaluate(first, rest)
+            self.evaluate(arg, first, rest)
         }
     }
 }

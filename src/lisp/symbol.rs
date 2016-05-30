@@ -1,13 +1,13 @@
 use lisp::Environment;
 use lisp::ExecutionTreeObject;
 
-pub enum Symbol {
+pub enum Symbol<TArg> {
     Object(ExecutionTreeObject),
-    BuiltInFuncNone(fn(&mut Environment) -> ExecutionTreeObject),
-    BuiltInFuncInput(fn(&mut Environment, Vec<ExecutionTreeObject>) -> ExecutionTreeObject),
+    BuiltInFuncNone(fn(TArg, &mut Environment<TArg>) -> ExecutionTreeObject),
+    BuiltInFuncInput(fn(TArg, &mut Environment<TArg>, Vec<ExecutionTreeObject>) -> ExecutionTreeObject),
 }
 
-impl Clone for Symbol {
+impl <TArg> Clone for Symbol<TArg> {
     fn clone(&self) -> Self {
         match self {
             &Symbol::Object(ref some) => Symbol::Object(some.clone()),
