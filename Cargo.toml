@@ -1,0 +1,12 @@
+[dependencies]
+define_error = "4"
+
+[package]
+authors = ["Tyler Wolf Leonhardt <tyler.wolf.leonhardt@gmail.com>"]
+description = "A simple lisp interpreter."
+exclude = [
+    ".gitignore"
+]
+license = "MIT"
+name = "simplisp"
+version = "0.3.0"
