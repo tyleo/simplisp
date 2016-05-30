@@ -19,7 +19,7 @@ impl <TArg> Environment<TArg> {
         }
     }
 
-    pub fn execute(&mut self, arg: TArg, execution_tree: ExecutionTree) -> R<String> {
+    pub fn execute(&mut self, arg: &TArg, execution_tree: ExecutionTree) -> R<String> {
         let execution_tree_root = execution_tree.into_root();
         let result = try!(self.evaluate_node(arg, execution_tree_root));
         result.to_string()
@@ -33,7 +33,7 @@ impl <TArg> Environment<TArg> {
         }
     }
 
-    pub fn parse_and_execute(&mut self, arg: TArg, source: &str) -> R<String> {
+    pub fn parse_and_execute(&mut self, arg: &TArg, source: &str) -> R<String> {
         let ast = AbstractSyntaxTree::new(source);
         {
             try!(ast.initialize());
@@ -44,7 +44,7 @@ impl <TArg> Environment<TArg> {
         self.execute(arg, execution_tree)
     }
 
-    fn evaluate(&mut self, arg: TArg, object: ExecutionTreeObject, rest: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
+    fn evaluate(&mut self, arg: &TArg, object: ExecutionTreeObject, rest: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
         self.call_stack.push(Frame::new());
 
         let result =
@@ -84,7 +84,7 @@ impl <TArg> Environment<TArg> {
         result
     }
 
-    fn evaluate_node(&mut self, arg: TArg, node: ExecutionTreeNode) -> R<ExecutionTreeObject> {
+    fn evaluate_node(&mut self, arg: &TArg, node: ExecutionTreeNode) -> R<ExecutionTreeObject> {
         let objects = node.into_objects();
 
         if objects.len() == 0 {
