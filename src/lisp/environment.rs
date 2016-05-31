@@ -62,13 +62,12 @@ impl <TArg> Environment<TArg> {
                         Symbol::Object(some) => self.evaluate(arg, some, rest),
                         Symbol::BuiltInFuncNone(some) => {
                             if rest.len() == 0 {
-                                let result = some(arg, self);
-                                Ok(result)
+                                some(arg, self)
                             } else {
                                 panic!()
                             }
                         },
-                        Symbol::BuiltInFuncInput(some) => Ok(some(arg, self, rest)),
+                        Symbol::BuiltInFuncInput(some) => some(arg, self, rest),
                     }
                 },
                 other => {
