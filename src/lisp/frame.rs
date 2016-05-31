@@ -1,4 +1,3 @@
-use error::LispResult as R;
 use lisp::Symbol;
 use std::collections::BTreeMap;
 
@@ -13,14 +12,14 @@ impl <TArg> Frame<TArg> {
         }
     }
 
-    pub fn get(&self, symbol: &str) -> R<Symbol<TArg>> {
-        match self.symbols.get(symbol) {
-            Some(some) => Ok(some.clone()),
-            None => panic!(),
-        }
-    }
-
     pub fn insert(&mut self, key: String, value: Symbol<TArg>) -> Option<Symbol<TArg>> {
         self.symbols.insert(key, value)
+    }
+
+    pub fn try_get(&self, symbol: &str) -> Option<Symbol<TArg>> {
+        match self.symbols.get(symbol) {
+            Some(some) => Some(some.clone()),
+            None => None,
+        }
     }
 }

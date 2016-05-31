@@ -21,7 +21,8 @@ impl <TArg> Environment<TArg> {
 
     pub fn execute(&mut self, arg: &TArg, execution_tree: ExecutionTree) -> R<String> {
         let execution_tree_root = execution_tree.into_root();
-        let result = try!(self.evaluate_node(arg, execution_tree_root));
+        let execution_tree_root_object = ExecutionTreeObject::Node(execution_tree_root);
+        let result = try!(self.evaluate_single(arg, execution_tree_root_object));
         result.to_string()
     }
 
@@ -44,59 +45,112 @@ impl <TArg> Environment<TArg> {
         self.execute(arg, execution_tree)
     }
 
-    fn evaluate(&mut self, arg: &TArg, object: ExecutionTreeObject, rest: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
+    pub fn evaluate_single(&mut self, arg: &TArg, object: ExecutionTreeObject) -> R<ExecutionTreeObject> {
         self.call_stack.push(Frame::new());
 
         let result =
             match object {
-                ExecutionTreeObject::Node(some) => {
-                    if rest.len() == 0 {
-                        self.evaluate_node(arg, some)
+                ExecutionTreeObject::Node(node) => {
+                    let inner_objects = node.into_objects();
+                    let inner_objects_len = inner_objects.len();
+                    if inner_objects_len > 1 {
+                        if let Some((first, _)) = Self::split(inner_objects.into_iter()) {
+                            self.evaluate_single(arg, first)
+                        } else {
+                            panic!()
+                        }
                     } else {
-                        panic!()
+                        self.evaluate_list(arg, inner_objects)
                     }
-                 },
-                ExecutionTreeObject::Symbol(some) => {
-                    let symbol = try!(self.global_frame.get(&some));
+                },
+
+                ExecutionTreeObject::Symbol(symbol) => {
+                    let symbol =
+                        match self.global_frame.try_get(&symbol) {
+                            Some(symbol) => symbol,
+                            None => try!(self.symbol_stack_search(&symbol)),
+                        };
                     match symbol {
-                        Symbol::Object(some) => self.evaluate(arg, some, rest),
-                        Symbol::BuiltInFuncNone(some) => {
-                            if rest.len() == 0 {
-                                some(arg, self)
-                            } else {
-                                panic!()
-                            }
+                        Symbol::BuiltInFunc(func) => {
+                            let empty_args = Vec::new();
+                            func(arg, self, empty_args)
                         },
-                        Symbol::BuiltInFuncInput(some) => some(arg, self, rest),
+                        Symbol::Object(object) => Ok(object),
                     }
-                },
-                other => {
-                    if rest.len() == 0 {
-                        Ok(other)
-                    } else {
-                        panic!()
-                    }
-                },
+                }
+
+                other => Ok(other),
             };
 
         self.call_stack.pop();
         result
     }
 
-    fn evaluate_node(&mut self, arg: &TArg, node: ExecutionTreeNode) -> R<ExecutionTreeObject> {
-        let objects = node.into_objects();
+    fn evaluate_list(&mut self, arg: &TArg, list: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
+        self.call_stack.push(Frame::new());
+        let size = list.len();
 
-        if objects.len() == 0 {
-            Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(Vec::new())))
+        let result =
+            if let Some((first, rest)) = Self::split(list.into_iter()) {
+                match first {
+                    ExecutionTreeObject::Node(node) => {
+                        let mut result = Vec::with_capacity(size);
+                        let node_object = ExecutionTreeObject::Node(node);
+                        result.push(try!(self.evaluate_single(arg, node_object)));
+                        for object in rest {
+                            result.push(try!(self.evaluate_single(arg, object)));
+                        }
+                        Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(result)))
+                    },
+
+                    ExecutionTreeObject::Symbol(symbol) => {
+                        let symbol =
+                            match self.global_frame.try_get(&symbol) {
+                                Some(symbol) => symbol,
+                                None => try!(self.symbol_stack_search(&symbol)),
+                            };
+                        match symbol {
+                            Symbol::BuiltInFunc(func) => {
+                                func(arg, self, rest.collect())
+                            },
+
+                            Symbol::Object(object) => {
+                                let mut result = Vec::with_capacity(size);
+                                result.push(object);
+                                for object in rest {
+                                    result.push(try!(self.evaluate_single(arg, object)));
+                                }
+                                Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(result)))
+                            },
+                        }
+                    }
+
+                    other => Ok(other),
+                }
+            } else {
+                Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(Vec::new())))
+            };
+
+        self.call_stack.pop();
+        result
+    }
+
+    fn split<TObjects>(mut objects: TObjects) -> Option<(ExecutionTreeObject, TObjects)>
+        where TObjects: Iterator<Item = ExecutionTreeObject> {
+        if let Some(first) = objects.next() {
+            Some((first, objects))
         } else {
-            let mut first = objects;
-            let rest = first.split_off(1);
-            let first =
-                match first.into_iter().nth(0) {
-                    Some(some) => some,
-                    None => panic!(),
-                };
-            self.evaluate(arg, first, rest)
+            None
         }
+    }
+
+    fn symbol_stack_search(&self, symbol: &str) -> R<Symbol<TArg>> {
+        let call_stack = &self.call_stack;
+        for stack_frame in call_stack.into_iter().rev() {
+            if let Some(symbol) = stack_frame.try_get(&symbol) {
+                return Ok(symbol);
+            }
+        }
+        panic!()
     }
 }
