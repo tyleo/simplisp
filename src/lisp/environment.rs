@@ -19,10 +19,10 @@ impl <TArg> Environment<TArg> {
         }
     }
 
-    pub fn execute(&mut self, arg: &TArg, execution_tree: ExecutionTree) -> R<String> {
+    pub unsafe fn execute(&mut self, arg: &TArg, execution_tree: ExecutionTree) -> R<String> {
         let execution_tree_root = execution_tree.into_root();
         let execution_tree_root_object = ExecutionTreeObject::Node(execution_tree_root);
-        let result = try!(self.evaluate_single(arg, execution_tree_root_object));
+        let result = try!(self.evaluate(arg, execution_tree_root_object));
         result.to_string()
     }
 
@@ -34,7 +34,11 @@ impl <TArg> Environment<TArg> {
         }
     }
 
-    pub fn parse_and_execute(&mut self, arg: &TArg, source: &str) -> R<String> {
+    pub fn get_global_frame(&mut self) -> &mut Frame<TArg> {
+        &mut self.global_frame
+    }
+
+    pub unsafe fn parse_and_execute(&mut self, arg: &TArg, source: &str) -> R<String> {
         let ast = AbstractSyntaxTree::new(source);
         {
             try!(ast.initialize());
@@ -45,7 +49,7 @@ impl <TArg> Environment<TArg> {
         self.execute(arg, execution_tree)
     }
 
-    pub fn evaluate_single(&mut self, arg: &TArg, object: ExecutionTreeObject) -> R<ExecutionTreeObject> {
+    pub unsafe fn evaluate(&mut self, arg: &TArg, object: ExecutionTreeObject) -> R<ExecutionTreeObject> {
         self.call_stack.push(Frame::new());
 
         let result =
@@ -54,13 +58,13 @@ impl <TArg> Environment<TArg> {
                     let inner_objects = node.into_objects();
                     let inner_objects_len = inner_objects.len();
                     if inner_objects_len > 1 {
+                        self.evaluate_list(arg, inner_objects)
+                    } else {
                         if let Some((first, _)) = Self::split(inner_objects.into_iter()) {
-                            self.evaluate_single(arg, first)
+                            self.evaluate(arg, first)
                         } else {
                             panic!()
                         }
-                    } else {
-                        self.evaluate_list(arg, inner_objects)
                     }
                 },
 
@@ -86,7 +90,7 @@ impl <TArg> Environment<TArg> {
         result
     }
 
-    fn evaluate_list(&mut self, arg: &TArg, list: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
+    unsafe fn evaluate_list(&mut self, arg: &TArg, list: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
         self.call_stack.push(Frame::new());
         let size = list.len();
 
@@ -96,9 +100,9 @@ impl <TArg> Environment<TArg> {
                     ExecutionTreeObject::Node(node) => {
                         let mut result = Vec::with_capacity(size);
                         let node_object = ExecutionTreeObject::Node(node);
-                        result.push(try!(self.evaluate_single(arg, node_object)));
+                        result.push(try!(self.evaluate(arg, node_object)));
                         for object in rest {
-                            result.push(try!(self.evaluate_single(arg, object)));
+                            result.push(try!(self.evaluate(arg, object)));
                         }
                         Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(result)))
                     },
@@ -118,7 +122,7 @@ impl <TArg> Environment<TArg> {
                                 let mut result = Vec::with_capacity(size);
                                 result.push(object);
                                 for object in rest {
-                                    result.push(try!(self.evaluate_single(arg, object)));
+                                    result.push(try!(self.evaluate(arg, object)));
                                 }
                                 Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(result)))
                             },

@@ -69,7 +69,6 @@ impl <'a> AbstractSyntaxTree<'a> {
                 },
                 character => {
                     if character.is_whitespace() {
-                        // Figure out if we are quoted
                         Self::try_end_current_word(&mut current_word_start, index, &mut objects, program_text);
 
                         last_char_type = LastCharType::WhiteSpace;
@@ -93,12 +92,12 @@ impl <'a> AbstractSyntaxTree<'a> {
                             None => {
                                 match character {
                                     '"' => {
-                                        let string_object = try!(Self::parse_double_quoted_text(enumerated_text, program_text));
+                                        let string_object = try!(Self::parse_double_quoted_text(index, enumerated_text, program_text));
                                         objects.push(string_object);
                                         last_char_type = LastCharType::Quote;
                                     },
                                     '\'' => {
-                                        let string_object = try!(Self::parse_single_quoted_text(enumerated_text, program_text));
+                                        let string_object = try!(Self::parse_single_quoted_text(index, enumerated_text, program_text));
                                         objects.push(string_object);
                                         last_char_type = LastCharType::Quote;
                                     },
@@ -117,22 +116,14 @@ impl <'a> AbstractSyntaxTree<'a> {
         panic!()
     }
 
-    fn parse_double_quoted_text<TIterator>(enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeObject<'a>>
+    fn parse_double_quoted_text<TIterator>(start_index: usize, enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeObject<'a>>
         where TIterator: Iterator<Item = (char, usize)> {
-        let mut start_index = None;
         let mut is_escaped = false;
 
         while let Some((character, index)) = enumerated_text.next() {
-            if start_index == None {
-                start_index = Some(index);
-            }
-
             if character == '"' && !is_escaped {
-                let start_index = start_index.unwrap();
-
-                let end_index = index;
-                let length = end_index - start_index;
-                let word = &program_text[start_index..length];
+                let end_index = index + 1;
+                let word = &program_text[start_index..end_index];
                 let string_object = AbstractSyntaxTreeObject::String(word);
                 return Ok(string_object);
             } else if character == '\\' {
@@ -145,22 +136,14 @@ impl <'a> AbstractSyntaxTree<'a> {
         panic!();
     }
 
-    fn parse_single_quoted_text<TIterator>(enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeObject<'a>>
+    fn parse_single_quoted_text<TIterator>(start_index: usize, enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeObject<'a>>
         where TIterator: Iterator<Item = (char, usize)> {
-        let mut start_index = None;
         let mut is_escaped = false;
 
         while let Some((character, index)) = enumerated_text.next() {
-            if start_index == None {
-                start_index = Some(index);
-            }
-
             if character == '\'' && !is_escaped {
-                let start_index = start_index.unwrap();
-
-                let end_index = index;
-                let length = end_index - start_index;
-                let word = &program_text[start_index..length];
+                let end_index = index + 1;
+                let word = &program_text[start_index..end_index];
                 let string_object = AbstractSyntaxTreeObject::String(word);
                 return Ok(string_object);
             } else if character == '\\' {
@@ -176,8 +159,7 @@ impl <'a> AbstractSyntaxTree<'a> {
     fn try_end_current_word(current_word_start_option: &mut Option<usize>, current_word_end: usize, objects: &mut Vec<AbstractSyntaxTreeObject<'a>>, program_text: &'a str) {
         match *current_word_start_option {
             Some(current_word_start) => {
-                let current_word_length = current_word_end - current_word_start;
-                let current_word = &program_text[current_word_start..current_word_length];
+                let current_word = &program_text[current_word_start..current_word_end];
                 let string_object = AbstractSyntaxTreeObject::String(current_word);
                 objects.push(string_object);
                 *current_word_start_option = None;

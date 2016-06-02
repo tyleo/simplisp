@@ -1,5 +1,6 @@
 use lisp::AbstractSyntaxTreeObject;
 
+#[derive(Debug)]
 pub struct AbstractSyntaxTreeNode<'a> {
     objects: Vec<AbstractSyntaxTreeObject<'a>>,
 }

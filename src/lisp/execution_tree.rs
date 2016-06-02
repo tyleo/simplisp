@@ -116,7 +116,7 @@ impl ExecutionTree {
                             } else if last_char != '"' {
                                 panic!();
                             } else {
-                                let string = try!(Self::convert_escape_sequences(&string[1..(len - 2)]));
+                                let string = try!(Self::convert_escape_sequences(&string[1..(len - 1)]));
                                  Ok(ExecutionTreeObject::String(string))
                             }
                         },
@@ -126,7 +126,7 @@ impl ExecutionTree {
                             } else if last_char != '\'' {
                                 panic!();
                             } else {
-                                let string = try!(Self::convert_escape_sequences(&string[1..(len - 2)]));
+                                let string = try!(Self::convert_escape_sequences(&string[1..(len - 1)]));
                                 if string.len() != 1 {
                                     panic!();
                                 } else {
