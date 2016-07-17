@@ -23,6 +23,96 @@ pub enum ExecutionTreeObject {
 }
 
 impl ExecutionTreeObject {
+    pub fn bool_str() -> &'static str {
+        "ExecutionTreeObject::Bool"
+    }
+
+    pub fn char_str() -> &'static str {
+        "ExecutionTreeObject::Char"
+    }
+
+    pub fn f32_str() -> &'static str {
+        "ExecutionTreeObject::F32"
+    }
+
+    pub fn f64_str() -> &'static str {
+        "ExecutionTreeObject::F64"
+    }
+
+    pub fn i8_str() -> &'static str {
+        "ExecutionTreeObject::I8"
+    }
+
+    pub fn i16_str() -> &'static str {
+        "ExecutionTreeObject::I16"
+    }
+
+    pub fn i32_str() -> &'static str {
+        "ExecutionTreeObject::I32"
+    }
+
+    pub fn i64_str() -> &'static str {
+        "ExecutionTreeObject::I64"
+    }
+
+    pub fn isize_str() -> &'static str {
+        "ExecutionTreeObject::ISize"
+    }
+
+    pub fn node_str() -> &'static str {
+        "ExecutionTreeObject::Node"
+    }
+
+    pub fn symbol_str() -> &'static str {
+        "ExecutionTreeObject::Symbol"
+    }
+
+    pub fn string_str() -> &'static str {
+        "ExecutionTreeObject::String"
+    }
+
+    pub fn u8_str() -> &'static str {
+        "ExecutionTreeObject::U8"
+    }
+
+    pub fn u16_str() -> &'static str {
+        "ExecutionTreeObject::U16"
+    }
+
+    pub fn u32_str() -> &'static str {
+        "ExecutionTreeObject::U32"
+    }
+
+    pub fn u64_str() -> &'static str {
+        "ExecutionTreeObject::U64"
+    }
+
+    pub fn usize_str() -> &'static str {
+        "ExecutionTreeObject::USize"
+    }
+
+    pub fn enum_to_string(&self) -> &'static str {
+        match self {
+            &ExecutionTreeObject::Bool(_) => Self::bool_str(),
+            &ExecutionTreeObject::Char(_) => Self::char_str(),
+            &ExecutionTreeObject::F32(_) => Self::f32_str(),
+            &ExecutionTreeObject::F64(_) => Self::f64_str(),
+            &ExecutionTreeObject::I8(_) => Self::i8_str(),
+            &ExecutionTreeObject::I16(_) => Self::i16_str(),
+            &ExecutionTreeObject::I32(_) => Self::i32_str(),
+            &ExecutionTreeObject::I64(_) => Self::i64_str(),
+            &ExecutionTreeObject::ISize(_) => Self::isize_str(),
+            &ExecutionTreeObject::Node(_) => Self::node_str(),
+            &ExecutionTreeObject::Symbol(_) => Self::symbol_str(),
+            &ExecutionTreeObject::String(_) => Self::string_str(),
+            &ExecutionTreeObject::U8(_) => Self::u8_str(),
+            &ExecutionTreeObject::U16(_) => Self::u16_str(),
+            &ExecutionTreeObject::U32(_) => Self::u32_str(),
+            &ExecutionTreeObject::U64(_) => Self::u64_str(),
+            &ExecutionTreeObject::USize(_) => Self::usize_str(),
+        }
+    }
+
     pub fn to_string(&self) -> R<String> {
         let result =
             match self {

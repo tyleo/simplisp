@@ -1,44 +1,26 @@
+use error::BeginningStringInWord;
+use error::InvalidPreviousChar;
+use error::LispError as E;
 use error::LispResult as R;
 use lisp::AbstractSyntaxTreeNode;
 use lisp::AbstractSyntaxTreeObject;
 use lisp::LastCharType;
-use std::cell::Ref;
-use std::cell::RefCell;
 
 pub struct AbstractSyntaxTree<'a> {
-    program_text: &'a str,
-    root: RefCell<Option<AbstractSyntaxTreeNode<'a>>>,
+    root: AbstractSyntaxTreeNode<'a>,
 }
 
 impl <'a> AbstractSyntaxTree<'a> {
-    pub fn new(program_text: &'a str) -> Self {
-        AbstractSyntaxTree {
-            program_text: program_text,
-            root: RefCell::new(None),
-        }
+    pub fn new(program_text: &'a str) -> R<Self> {
+        let result =
+            AbstractSyntaxTree {
+                root: try!(Self::parse_program_text(program_text)),
+            };
+        Ok(result)
     }
 
-    pub fn get_root(&self) -> R<Ref<AbstractSyntaxTreeNode<'a>>> {
-        let root = self.root.borrow();
-        if let None = *root {
-            panic!();
-        }
-        let ast_node = Ref::map(root, |item| item.as_ref().unwrap());
-        Ok(ast_node)
-    }
-
-    pub fn initialize(&'a self) -> R<()> {
-        let program_text = self.program_text;
-
-        if program_text.as_bytes().get(0) != Some(&b'(') {
-            panic!()
-        } else {
-            let mut enumerated_text = program_text.chars().zip(0..program_text.len()).into_iter();
-            enumerated_text.next();
-            let root = try!(Self::parse(&mut enumerated_text, program_text));
-            *self.root.borrow_mut() = Some(root);
-            Ok(())
-        }
+    pub fn get_root(&self) -> &AbstractSyntaxTreeNode<'a> {
+        &self.root
     }
 
     fn parse<TIterator>(enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeNode<'a>>
@@ -52,8 +34,10 @@ impl <'a> AbstractSyntaxTree<'a> {
             match character {
                 '(' => {
                     match last_char_type {
-                        LastCharType::Word => panic!(),
-                        LastCharType::Quote => panic!(),
+                        LastCharType::Word | LastCharType::Quote => {
+                            let err = InvalidPreviousChar::new(character, index, last_char_type);
+                            return Err(E::from(err))
+                        },
                         _ => { },
                     }
 
@@ -74,16 +58,20 @@ impl <'a> AbstractSyntaxTree<'a> {
                         last_char_type = LastCharType::WhiteSpace;
                     } else {
                         match last_char_type {
-                            LastCharType::CloseParen => panic!(),
-                            LastCharType::Quote => panic!(),
+                            LastCharType::CloseParen | LastCharType::Quote => {
+                                let err = InvalidPreviousChar::new(character, index, last_char_type);
+                                return Err(E::from(err));
+                            },
                             _ => { },
                         }
 
                         match current_word_start {
                             Some(_) => {
                                 match character {
-                                    '"' => panic!(),
-                                    '\'' => panic!(),
+                                    '"' | '\'' => {
+                                        let err = BeginningStringInWord::new(character, index);
+                                        return Err(E::from(err));
+                                    },
                                     _ => { },
                                 }
 
@@ -134,6 +122,17 @@ impl <'a> AbstractSyntaxTree<'a> {
         }
 
         panic!();
+    }
+
+    pub fn parse_program_text(program_text: &'a str) -> R<AbstractSyntaxTreeNode<'a>> {
+        if program_text.as_bytes().get(0) != Some(&b'(') {
+            panic!()
+        } else {
+            let mut enumerated_text = program_text.chars().zip(0..program_text.len()).into_iter();
+            enumerated_text.next();
+            let root = try!(Self::parse(&mut enumerated_text, program_text));
+            Ok(root)
+        }
     }
 
     fn parse_single_quoted_text<TIterator>(start_index: usize, enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeObject<'a>>

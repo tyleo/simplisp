@@ -12,7 +12,7 @@ pub struct ExecutionTree {
 
 impl ExecutionTree {
     pub fn new(syntax_tree: &AbstractSyntaxTree) -> R<Self> {
-        let abstract_root = try!(syntax_tree.get_root());
+        let abstract_root = syntax_tree.get_root();
         let root = try!(Self::visit_node(abstract_root.deref()));
         let result =
             ExecutionTree {

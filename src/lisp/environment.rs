@@ -39,10 +39,7 @@ impl <TArg> Environment<TArg> {
     }
 
     pub unsafe fn parse_and_execute(&mut self, arg: &TArg, source: &str) -> R<String> {
-        let ast = AbstractSyntaxTree::new(source);
-        {
-            try!(ast.initialize());
-        }
+        let ast = try!(AbstractSyntaxTree::new(source));
 
         let execution_tree = try!(ExecutionTree::new(&ast));
 
