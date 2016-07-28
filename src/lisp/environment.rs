@@ -1,4 +1,6 @@
+use error::LispError as E;
 use error::LispResult as R;
+use error::SymbolNotOnStack;
 use lisp::AbstractSyntaxTree;
 use lisp::ExecutionTree;
 use lisp::ExecutionTreeNode;
@@ -24,14 +26,6 @@ impl <TArg> Environment<TArg> {
         let execution_tree_root_object = ExecutionTreeObject::Node(execution_tree_root);
         let result = try!(self.evaluate(arg, execution_tree_root_object));
         result.to_string()
-    }
-
-    pub fn get_current_frame(&mut self) -> R<&mut Frame<TArg>> {
-        let index_of_last = self.call_stack.len() - 1;
-        match self.call_stack.get_mut(index_of_last) {
-            Some(some) => Ok(some),
-            None => panic!(),
-        }
     }
 
     pub fn get_global_frame(&mut self) -> &mut Frame<TArg> {
@@ -60,7 +54,8 @@ impl <TArg> Environment<TArg> {
                         if let Some((first, _)) = Self::split(inner_objects.into_iter()) {
                             self.evaluate(arg, first)
                         } else {
-                            panic!()
+                            let nil = ExecutionTreeObject::nil();
+                            Ok(nil)
                         }
                     }
                 },
@@ -152,6 +147,8 @@ impl <TArg> Environment<TArg> {
                 return Ok(symbol);
             }
         }
-        panic!()
+
+        let err = SymbolNotOnStack::new(symbol.to_string());
+        Err(E::from(err))
     }
 }

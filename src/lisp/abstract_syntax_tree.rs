@@ -2,6 +2,10 @@ use error::BeginningStringInWord;
 use error::InvalidPreviousChar;
 use error::LispError as E;
 use error::LispResult as R;
+use error::NoClosingDoubleQuote;
+use error::NoClosingParenthesis;
+use error::NoClosingSingleQuote;
+use error::NoProgramStartParenthesis;
 use lisp::AbstractSyntaxTreeNode;
 use lisp::AbstractSyntaxTreeObject;
 use lisp::LastCharType;
@@ -101,7 +105,8 @@ impl <'a> AbstractSyntaxTree<'a> {
             }
         }
 
-        panic!()
+        let err = NoClosingParenthesis::new(program_text.to_string());
+        return Err(E::from(err));
     }
 
     fn parse_double_quoted_text<TIterator>(start_index: usize, enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeObject<'a>>
@@ -121,12 +126,14 @@ impl <'a> AbstractSyntaxTree<'a> {
             }
         }
 
-        panic!();
+        let err = NoClosingDoubleQuote::new(program_text.to_string());
+        return Err(E::from(err));
     }
 
     pub fn parse_program_text(program_text: &'a str) -> R<AbstractSyntaxTreeNode<'a>> {
         if program_text.as_bytes().get(0) != Some(&b'(') {
-            panic!()
+            let err = NoProgramStartParenthesis::new(program_text.to_string());
+            Err(E::from(err))
         } else {
             let mut enumerated_text = program_text.chars().zip(0..program_text.len()).into_iter();
             enumerated_text.next();
@@ -152,7 +159,8 @@ impl <'a> AbstractSyntaxTree<'a> {
             }
         }
 
-        panic!();
+        let err = NoClosingSingleQuote::new(program_text.to_string());
+        return Err(E::from(err));
     }
 
     fn try_end_current_word(current_word_start_option: &mut Option<usize>, current_word_end: usize, objects: &mut Vec<AbstractSyntaxTreeObject<'a>>, program_text: &'a str) {

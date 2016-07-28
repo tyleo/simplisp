@@ -9,6 +9,11 @@ define_error!(
     pub error LispError {
         suberror BeginningStringInWord,
         suberror ErrorWrapper,
-        suberror InvalidPreviousChar
+        suberror InvalidPreviousChar,
+        suberror NoClosingDoubleQuote,
+        suberror NoClosingParenthesis,
+        suberror NoClosingSingleQuote,
+        suberror NoProgramStartParenthesis,
+        suberror SymbolNotOnStack
     }
 );

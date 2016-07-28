@@ -23,6 +23,10 @@ pub enum ExecutionTreeObject {
 }
 
 impl ExecutionTreeObject {
+    pub fn nil() -> Self {
+        ExecutionTreeObject::Node(ExecutionTreeNode::nil())
+    }
+
     pub fn bool_str() -> &'static str {
         "ExecutionTreeObject::Bool"
     }

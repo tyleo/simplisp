@@ -21,6 +21,12 @@ impl ExecutionTreeNode {
         self.objects
     }
 
+    pub fn nil() -> Self {
+        ExecutionTreeNode {
+            objects: Vec::new(),
+        }
+    }
+
     pub fn to_string(&self) -> R<String> {
         let mut result = String::new();
         result.push('(');
