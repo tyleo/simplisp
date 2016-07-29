@@ -35,12 +35,8 @@ impl ExecutionTreeNode {
             result.push_str(&string);
             result.push(' ');
         }
-        if let Some(last_char) = result.pop() {
-            if last_char != ' ' {
-                result.push(last_char);
-            }
-        } else {
-            panic!();
+        if result.len() != 1 {
+            result.pop();
         }
         result.push(')');
         Ok(result)
