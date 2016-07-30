@@ -89,23 +89,12 @@ impl <TArg> Environment<TArg> {
         let result =
             if let Some((first, rest)) = Self::split(list.into_iter()) {
                 match first {
-                    ExecutionTreeObject::Node(node) => {
-                        let mut result = Vec::with_capacity(size);
-                        let node_object = ExecutionTreeObject::Node(node);
-                        result.push(try!(self.evaluate(arg, node_object)));
-                        
-                        for object in rest {
-                            result.push(try!(self.evaluate(arg, object)));
-                        }
-                        Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(result)))
-                    },
-
                     ExecutionTreeObject::Symbol(symbol) => {
                         let symbol =
-                            match self.global_frame.try_get(&symbol) {
-                                Some(symbol) => symbol,
-                                None => try!(self.symbol_stack_search(&symbol)),
-                            };
+                        match self.global_frame.try_get(&symbol) {
+                            Some(symbol) => symbol,
+                            None => try!(self.symbol_stack_search(&symbol)),
+                        };
                         match symbol {
                             Symbol::BuiltInFunc(func) => {
                                 func(arg, self, rest.collect())
@@ -120,9 +109,16 @@ impl <TArg> Environment<TArg> {
                                 Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(result)))
                             },
                         }
-                    }
+                    },
 
-                    other => Ok(other),
+                    other => {
+                        let mut result = Vec::with_capacity(size);
+                        result.push(try!(self.evaluate(arg, other)));
+                        for object in rest {
+                            result.push(try!(self.evaluate(arg, object)));
+                        }
+                        Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(result)))
+                    },
                 }
             } else {
                 Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(Vec::new())))
