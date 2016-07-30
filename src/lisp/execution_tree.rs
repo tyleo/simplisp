@@ -110,9 +110,10 @@ impl ExecutionTree {
                             return Err(E::from(err));
                         },
                     };
-                let len = string.len();
+                let char_len = string.chars().count();
+                let byte_len = string.len();
                 let last_char =
-                    match string.chars().nth(len - 1) {
+                    match string.chars().nth(char_len - 1) {
                         Some(some) => some,
                         None => {
                             let err = NoLastChar::new(string.to_string());
@@ -121,11 +122,11 @@ impl ExecutionTree {
                     };
 
                 if first_char.is_digit(10) {
-                    if len > 5 {
+                    if char_len > 5 {
                         Self::visit_six_char_number_string(string)
-                    } else if len > 3 {
+                    } else if char_len > 3 {
                         Self::visit_four_char_number_string(string)
-                    } else if len > 2 {
+                    } else if char_len > 2 {
                         Self::visit_three_char_number_string(string)
                     } else {
                         Self::visit_two_char_number_string(string)
@@ -133,24 +134,24 @@ impl ExecutionTree {
                 } else {
                     match first_char {
                         '"' => {
-                            if len < 2 || last_char != '"' {
+                            if char_len < 2 || last_char != '"' {
                                 let err = NoClosingDoubleQuoteInExecutionTree::new(string.to_string());
                                 return Err(E::from(err));
                             } else {
-                                let string = try!(Self::convert_escape_sequences(&string[1..(len - 1)]));
+                                let string = try!(Self::convert_escape_sequences(&string[1..(byte_len - 1)]));
                                  Ok(ExecutionTreeObject::String(string))
                             }
                         },
                         '\'' => {
-                            if len < 3 {
+                            if char_len < 3 {
                                 let err = NoCharacterInSingleQuotes::new(string.to_string());
                                 return Err(E::from(err));
                             } else if last_char != '\'' {
                                 let err = NoClosingSingleQuoteInExecutionTree::new(string.to_string());
                                 return Err(E::from(err));
                             } else {
-                                let string = try!(Self::convert_escape_sequences(&string[1..(len - 1)]));
-                                if string.len() != 1 {
+                                let string = try!(Self::convert_escape_sequences(&string[1..(byte_len - 1)]));
+                                if string.chars().count() != 1 {
                                     let err = MultipleCharactersInSingleQuotes::new(string);
                                     return Err(E::from(err));
                                 } else {
@@ -176,146 +177,152 @@ impl ExecutionTree {
     }
 
     fn visit_six_char_number_string(string: &str) -> R<ExecutionTreeObject> {
-        let len = string.len();
-        let first_chars = &string[0..(len - 5)];
-        let last_five_chars = &string[(len - 5)..5];
+        if let Some((last_five_index, _)) = string.char_indices().rev().take(5).nth(4) {
+            let (first_chars, last_five_chars) = string.split_at(last_five_index);
 
-        match last_five_chars {
-            "isize" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::ISize(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::isize_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
+            match last_five_chars {
+                "isize" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::ISize(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::isize_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                "usize" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::USize(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::usize_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                _ => {
+                    Self::visit_four_char_number_string(string)
                 }
-            },
-            "usize" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::USize(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::usize_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
-                }
-            },
-            _ => {
-                Self::visit_four_char_number_string(string)
             }
+        } else {
+            panic!();
         }
     }
 
     fn visit_four_char_number_string(string: &str) -> R<ExecutionTreeObject> {
-        let len = string.len();
-        let first_chars = &string[0..(len - 3)];
-        let last_three_chars = &string[(len - 3)..3];
+        if let Some((last_three_index, _)) = string.char_indices().rev().take(3).nth(2) {
+            let (first_chars, last_three_chars) = string.split_at(last_three_index);
 
-        match last_three_chars {
-            "f32" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::F32(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::f32_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
+            match last_three_chars {
+                "f32" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::F32(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::f32_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                "f64" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::F64(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::f64_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                "i16" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::I16(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::i16_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                "i32" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::I32(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::i32_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                "i64" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::I64(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::i64_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                "u16" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::U16(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::u16_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                "u32" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::U32(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::u32_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                "u64" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::U64(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::u64_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                _ => {
+                    Self::visit_three_char_number_string(string)
                 }
-            },
-            "f64" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::F64(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::f64_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
-                }
-            },
-            "i16" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::I16(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::i16_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
-                }
-            },
-            "i32" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::I32(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::i32_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
-                }
-            },
-            "i64" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::I64(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::i64_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
-                }
-            },
-            "u16" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::U16(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::u16_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
-                }
-            },
-            "u32" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::U32(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::u32_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
-                }
-            },
-            "u64" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::U64(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::u64_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
-                }
-            },
-            _ => {
-                Self::visit_three_char_number_string(string)
             }
+        } else {
+            panic!();
         }
     }
 
     fn visit_three_char_number_string(string: &str) -> R<ExecutionTreeObject> {
-        let len = string.len();
-        let first_chars = &string[0..(len - 2)];
-        let last_two_chars = &string[(len - 2)..2];
+        if let Some((last_two_index, _)) = string.char_indices().rev().take(2).nth(1) {
+            let (first_chars, last_two_chars) = string.split_at(last_two_index);
 
-        match last_two_chars {
-            "i8" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::I8(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::i8_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
+            match last_two_chars {
+                "i8" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::I8(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::i8_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                "u8" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::U8(ok)),
+                        Err(_) => {
+                            let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::u8_str().to_string(), string.to_string());
+                            Err(E::from(err))
+                        },
+                    }
+                },
+                _ => {
+                    Self::visit_two_char_number_string(string)
                 }
-            },
-            "u8" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::U8(ok)),
-                    Err(_) => {
-                        let err = NumericTokenCannotBeParsed::new(ExecutionTreeObject::u8_str().to_string(), string.to_string());
-                        Err(E::from(err))
-                    },
-                }
-            },
-            _ => {
-                Self::visit_two_char_number_string(string)
             }
+        } else {
+            panic!();
         }
     }
 

@@ -93,6 +93,7 @@ impl <TArg> Environment<TArg> {
                         let mut result = Vec::with_capacity(size);
                         let node_object = ExecutionTreeObject::Node(node);
                         result.push(try!(self.evaluate(arg, node_object)));
+                        
                         for object in rest {
                             result.push(try!(self.evaluate(arg, object)));
                         }

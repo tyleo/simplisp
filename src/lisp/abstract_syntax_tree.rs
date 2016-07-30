@@ -28,13 +28,13 @@ impl <'a> AbstractSyntaxTree<'a> {
     }
 
     fn parse<TIterator>(enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeNode<'a>>
-        where TIterator: Iterator<Item = (char, usize)> {
+        where TIterator: Iterator<Item = (usize, char)> {
         let mut objects = Vec::new();
 
         let mut current_word_start = None;
         let mut last_char_type = LastCharType::OpenParen;
 
-        while let Some((character, index)) = enumerated_text.next() {
+        while let Some((index, character)) = enumerated_text.next() {
             match character {
                 '(' => {
                     match last_char_type {
@@ -110,10 +110,10 @@ impl <'a> AbstractSyntaxTree<'a> {
     }
 
     fn parse_double_quoted_text<TIterator>(start_index: usize, enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeObject<'a>>
-        where TIterator: Iterator<Item = (char, usize)> {
+        where TIterator: Iterator<Item = (usize, char)> {
         let mut is_escaped = false;
 
-        while let Some((character, index)) = enumerated_text.next() {
+        while let Some((index, character)) = enumerated_text.next() {
             if character == '"' && !is_escaped {
                 let end_index = index + 1;
                 let word = &program_text[start_index..end_index];
@@ -135,7 +135,7 @@ impl <'a> AbstractSyntaxTree<'a> {
             let err = NoProgramStartParenthesis::new(program_text.to_string());
             Err(E::from(err))
         } else {
-            let mut enumerated_text = program_text.chars().zip(0..program_text.len()).into_iter();
+            let mut enumerated_text = program_text.char_indices();
             enumerated_text.next();
             let root = try!(Self::parse(&mut enumerated_text, program_text));
             Ok(root)
@@ -143,10 +143,10 @@ impl <'a> AbstractSyntaxTree<'a> {
     }
 
     fn parse_single_quoted_text<TIterator>(start_index: usize, enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeObject<'a>>
-        where TIterator: Iterator<Item = (char, usize)> {
+        where TIterator: Iterator<Item = (usize, char)> {
         let mut is_escaped = false;
 
-        while let Some((character, index)) = enumerated_text.next() {
+        while let Some((index, character)) = enumerated_text.next() {
             if character == '\'' && !is_escaped {
                 let end_index = index + 1;
                 let word = &program_text[start_index..end_index];
