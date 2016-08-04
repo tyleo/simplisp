@@ -21,27 +21,8 @@ impl <TArg> Environment<TArg> {
         }
     }
 
-    pub unsafe fn execute(&mut self, arg: &TArg, execution_tree: ExecutionTree) -> R<String> {
-        let execution_tree_root = execution_tree.into_root();
-        let execution_tree_root_object = ExecutionTreeObject::Node(execution_tree_root);
-        let result = try!(self.evaluate(arg, execution_tree_root_object));
-        result.to_string()
-    }
-
-    pub fn get_global_frame(&mut self) -> &mut Frame<TArg> {
-        &mut self.global_frame
-    }
-
-    pub unsafe fn parse_and_execute(&mut self, arg: &TArg, source: &str) -> R<String> {
-        let ast = try!(AbstractSyntaxTree::new(source));
-
-        let execution_tree = try!(ExecutionTree::new(&ast));
-
-        self.execute(arg, execution_tree)
-    }
-
     pub unsafe fn evaluate(&mut self, arg: &TArg, object: ExecutionTreeObject) -> R<ExecutionTreeObject> {
-        self.call_stack.push(Frame::new());
+        self.push_frame();
 
         let result =
             match object {
@@ -78,12 +59,47 @@ impl <TArg> Environment<TArg> {
                 other => Ok(other),
             };
 
-        self.call_stack.pop();
+        self.pop_frame();
         result
     }
 
-    unsafe fn evaluate_list(&mut self, arg: &TArg, list: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
+    pub unsafe fn execute(&mut self, arg: &TArg, execution_tree: ExecutionTree) -> R<String> {
+        let execution_tree_root = execution_tree.into_root();
+        let execution_tree_root_object = ExecutionTreeObject::Node(execution_tree_root);
+        let result = try!(self.evaluate(arg, execution_tree_root_object));
+        result.to_string()
+    }
+
+    pub fn get_current_frame(&mut self) -> Option<&mut Frame<TArg>> {
+        let len = self.call_stack.len();
+        match len {
+            0 => None,
+            n => Some(&mut self.call_stack[n - 1]),
+        }
+    }
+
+    pub fn get_global_frame(&mut self) -> &mut Frame<TArg> {
+        &mut self.global_frame
+    }
+
+    pub unsafe fn parse_and_execute(&mut self, arg: &TArg, source: &str) -> R<String> {
+        let ast = try!(AbstractSyntaxTree::new(source));
+
+        let execution_tree = try!(ExecutionTree::new(&ast));
+
+        self.execute(arg, execution_tree)
+    }
+
+    pub fn pop_frame(&mut self) {
+        self.call_stack.pop();
+    }
+
+    pub fn push_frame(&mut self) {
         self.call_stack.push(Frame::new());
+    }
+
+    unsafe fn evaluate_list(&mut self, arg: &TArg, list: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
+        self.push_frame();
         let size = list.len();
 
         let result =
@@ -124,7 +140,7 @@ impl <TArg> Environment<TArg> {
                 Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(Vec::new())))
             };
 
-        self.call_stack.pop();
+        self.pop_frame();
         result
     }
 
