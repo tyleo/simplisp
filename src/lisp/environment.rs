@@ -88,11 +88,11 @@ impl <TArg> Environment<TArg> {
         self.execute(arg, execution_tree)
     }
 
-    pub fn pop_frame(&mut self) {
+    fn pop_frame(&mut self) {
         self.call_stack.pop();
     }
 
-    pub fn push_frame(&mut self) {
+    fn push_frame(&mut self) {
         self.call_stack.push(Frame::new());
     }
 
