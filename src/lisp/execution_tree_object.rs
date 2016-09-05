@@ -1,6 +1,4 @@
-use error::InvalidExecutionTreeObjectConversion;
-use error::LispError as E;
-use error::LispResult as R;
+use error::*;
 use lisp::ExecutionTreeNode;
 
 #[derive(Clone)]
@@ -119,7 +117,7 @@ impl ExecutionTreeObject {
         }
     }
 
-    pub fn to_string(&self) -> R<String> {
+    pub fn to_string(&self) -> Result<String> {
         let result =
             match self {
                 &ExecutionTreeObject::Bool(ref some) => some.to_string(),
@@ -144,194 +142,178 @@ impl ExecutionTreeObject {
     }
 }
 
-impl From<ExecutionTreeObject> for R<bool> {
-    fn from(object: ExecutionTreeObject) -> R<bool> {
+impl From<ExecutionTreeObject> for Result<bool> {
+    fn from(object: ExecutionTreeObject) -> Result<bool> {
         match object {
             ExecutionTreeObject::Bool(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::bool_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::bool_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<char> {
-    fn from(object: ExecutionTreeObject) -> R<char> {
+impl From<ExecutionTreeObject> for Result<char> {
+    fn from(object: ExecutionTreeObject) -> Result<char> {
         match object {
             ExecutionTreeObject::Char(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::char_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::char_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<f32> {
-    fn from(object: ExecutionTreeObject) -> R<f32> {
+impl From<ExecutionTreeObject> for Result<f32> {
+    fn from(object: ExecutionTreeObject) -> Result<f32> {
         match object {
             ExecutionTreeObject::F32(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::f32_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::f32_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<f64> {
-    fn from(object: ExecutionTreeObject) -> R<f64> {
+impl From<ExecutionTreeObject> for Result<f64> {
+    fn from(object: ExecutionTreeObject) -> Result<f64> {
         match object {
             ExecutionTreeObject::F64(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::f64_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::f64_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<i8> {
-    fn from(object: ExecutionTreeObject) -> R<i8> {
+impl From<ExecutionTreeObject> for Result<i8> {
+    fn from(object: ExecutionTreeObject) -> Result<i8> {
         match object {
             ExecutionTreeObject::I8(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::i8_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::i8_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<i16> {
-    fn from(object: ExecutionTreeObject) -> R<i16> {
+impl From<ExecutionTreeObject> for Result<i16> {
+    fn from(object: ExecutionTreeObject) -> Result<i16> {
         match object {
             ExecutionTreeObject::I16(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::i16_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::i16_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<i32> {
-    fn from(object: ExecutionTreeObject) -> R<i32> {
+impl From<ExecutionTreeObject> for Result<i32> {
+    fn from(object: ExecutionTreeObject) -> Result<i32> {
         match object {
             ExecutionTreeObject::I32(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::i32_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::i32_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<i64> {
-    fn from(object: ExecutionTreeObject) -> R<i64> {
+impl From<ExecutionTreeObject> for Result<i64> {
+    fn from(object: ExecutionTreeObject) -> Result<i64> {
         match object {
             ExecutionTreeObject::I64(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::i64_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::i64_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<isize> {
-    fn from(object: ExecutionTreeObject) -> R<isize> {
+impl From<ExecutionTreeObject> for Result<isize> {
+    fn from(object: ExecutionTreeObject) -> Result<isize> {
         match object {
             ExecutionTreeObject::ISize(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::isize_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::isize_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<ExecutionTreeNode> {
-    fn from(object: ExecutionTreeObject) -> R<ExecutionTreeNode> {
+impl From<ExecutionTreeObject> for Result<ExecutionTreeNode> {
+    fn from(object: ExecutionTreeObject) -> Result<ExecutionTreeNode> {
         match object {
             ExecutionTreeObject::Node(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::node_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::node_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<String> {
-    fn from(object: ExecutionTreeObject) -> R<String> {
+impl From<ExecutionTreeObject> for Result<String> {
+    fn from(object: ExecutionTreeObject) -> Result<String> {
         match object {
             ExecutionTreeObject::String(result) => Ok(result),
             ExecutionTreeObject::Symbol(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::string_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::string_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<u8> {
-    fn from(object: ExecutionTreeObject) -> R<u8> {
+impl From<ExecutionTreeObject> for Result<u8> {
+    fn from(object: ExecutionTreeObject) -> Result<u8> {
         match object {
             ExecutionTreeObject::U8(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::u8_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::u8_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<u16> {
-    fn from(object: ExecutionTreeObject) -> R<u16> {
+impl From<ExecutionTreeObject> for Result<u16> {
+    fn from(object: ExecutionTreeObject) -> Result<u16> {
         match object {
             ExecutionTreeObject::U16(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::u16_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::u16_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<u32> {
-    fn from(object: ExecutionTreeObject) -> R<u32> {
+impl From<ExecutionTreeObject> for Result<u32> {
+    fn from(object: ExecutionTreeObject) -> Result<u32> {
         match object {
             ExecutionTreeObject::U32(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::u32_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::u32_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<u64> {
-    fn from(object: ExecutionTreeObject) -> R<u64> {
+impl From<ExecutionTreeObject> for Result<u64> {
+    fn from(object: ExecutionTreeObject) -> Result<u64> {
         match object {
             ExecutionTreeObject::U64(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::u64_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::u64_str().to_string()).into())
             },
         }
     }
 }
 
-impl From<ExecutionTreeObject> for R<usize> {
-    fn from(object: ExecutionTreeObject) -> R<usize> {
+impl From<ExecutionTreeObject> for Result<usize> {
+    fn from(object: ExecutionTreeObject) -> Result<usize> {
         match object {
             ExecutionTreeObject::USize(result) => Ok(result),
             object => {
-                let err = InvalidExecutionTreeObjectConversion::new(object.enum_to_string().to_string(), ExecutionTreeObject::usize_str().to_string());
-                Err(E::from(err))
+                Err(ErrorKind::InvalidExecutionTreeObjectConversion(object.enum_to_string().to_string(), ExecutionTreeObject::usize_str().to_string()).into())
             },
         }
     }

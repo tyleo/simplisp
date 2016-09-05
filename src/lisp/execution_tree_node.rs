@@ -1,4 +1,4 @@
-use error::LispResult as R;
+use error::*;
 use lisp::ExecutionTreeObject;
 
 #[derive(Clone)]
@@ -27,7 +27,7 @@ impl ExecutionTreeNode {
         }
     }
 
-    pub fn to_string(&self) -> R<String> {
+    pub fn to_string(&self) -> Result<String> {
         let mut result = String::new();
         result.push('(');
         for object in &self.objects {

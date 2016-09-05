@@ -1,10 +1,10 @@
-use error::LispResult as R;
+use error::*;
 use lisp::Environment;
 use lisp::ExecutionTreeObject;
 
 pub enum Symbol<TArg> {
     Object(ExecutionTreeObject),
-    BuiltInFunc(unsafe fn(&TArg, &mut Environment<TArg>, Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject>),
+    BuiltInFunc(unsafe fn(&TArg, &mut Environment<TArg>, Vec<ExecutionTreeObject>) -> Result<ExecutionTreeObject>),
 }
 
 impl <TArg> Clone for Symbol<TArg> {

@@ -1,6 +1,4 @@
-use error::LispError as E;
-use error::LispResult as R;
-use error::SymbolNotOnStack;
+use error::*;
 use lisp::AbstractSyntaxTree;
 use lisp::ExecutionTree;
 use lisp::ExecutionTreeNode;
@@ -21,7 +19,7 @@ impl <TArg> Environment<TArg> {
         }
     }
 
-    pub unsafe fn evaluate(&mut self, arg: &TArg, object: ExecutionTreeObject) -> R<ExecutionTreeObject> {
+    pub unsafe fn evaluate(&mut self, arg: &TArg, object: ExecutionTreeObject) -> Result<ExecutionTreeObject> {
         self.push_frame();
 
         let result =
@@ -63,7 +61,7 @@ impl <TArg> Environment<TArg> {
         result
     }
 
-    pub unsafe fn execute(&mut self, arg: &TArg, execution_tree: ExecutionTree) -> R<String> {
+    pub unsafe fn execute(&mut self, arg: &TArg, execution_tree: ExecutionTree) -> Result<String> {
         let execution_tree_root = execution_tree.into_root();
         let execution_tree_root_object = ExecutionTreeObject::Node(execution_tree_root);
         let result = try!(self.evaluate(arg, execution_tree_root_object));
@@ -82,7 +80,7 @@ impl <TArg> Environment<TArg> {
         &mut self.global_frame
     }
 
-    pub unsafe fn parse_and_execute(&mut self, arg: &TArg, source: &str) -> R<String> {
+    pub unsafe fn parse_and_execute(&mut self, arg: &TArg, source: &str) -> Result<String> {
         let ast = try!(AbstractSyntaxTree::new(source));
 
         let execution_tree = try!(ExecutionTree::new(&ast));
@@ -98,7 +96,7 @@ impl <TArg> Environment<TArg> {
         self.call_stack.push(Frame::new());
     }
 
-    unsafe fn evaluate_list(&mut self, arg: &TArg, list: Vec<ExecutionTreeObject>) -> R<ExecutionTreeObject> {
+    unsafe fn evaluate_list(&mut self, arg: &TArg, list: Vec<ExecutionTreeObject>) -> Result<ExecutionTreeObject> {
         self.push_frame();
         let size = list.len();
 
@@ -153,7 +151,7 @@ impl <TArg> Environment<TArg> {
         }
     }
 
-    fn symbol_stack_search(&self, symbol: &str) -> R<Symbol<TArg>> {
+    fn symbol_stack_search(&self, symbol: &str) -> Result<Symbol<TArg>> {
         let call_stack = &self.call_stack;
         for stack_frame in call_stack.into_iter().rev() {
             if let Some(symbol) = stack_frame.try_get(&symbol) {
@@ -161,7 +159,6 @@ impl <TArg> Environment<TArg> {
             }
         }
 
-        let err = SymbolNotOnStack::new(symbol.to_string());
-        Err(E::from(err))
+        Err(ErrorKind::SymbolNotOnStack(symbol.to_string()).into())
     }
 }

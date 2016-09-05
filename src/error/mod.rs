@@ -1,79 +1,194 @@
-pub mod beginning_string_in_word;
+use last_char_type::LastCharType;
+use std::error::Error as StdError;
 
-pub mod empty_escape_sequence;
+error_chain! {
+    types { }
 
-pub mod empty_string_detected;
+    links { }
 
-pub mod error_wrapper;
+    foreign_links { }
 
-pub mod invalid_escape_sequence;
+    errors {
+        BeginningStringInWord(character: char, index: usize) {
+            description("Error parsing lisp. Attempted to begin a string while parsing another word.")
+            display(
+                "{}{}{}{}{}",
+                "Error parsing lisp. Attempted to begin a string while parsing another word. The character, '",
+                character,
+                "', was found at index, '",
+                index,
+                "' with no separation from the previous word.",
+            )
+        }
 
-pub mod invalid_execution_tree_object_conversion;
+        EmptyEscapeSequence {
+            description("Error escaping character. A character must follow a, '\\'.")
+            display(
+                "{}",
+                "Error escaping character. A character must follow a, '\\'.",
+            )
+        }
 
-pub mod invalid_previous_char;
+        EmptyStringDetected(contents: String) {
+            description("Error converting string to lisp object. The string is empty.")
+            display(
+                "{}{}{}",
+                "Error converting string to lisp object. The string, '",
+                contents,
+                "', is empty.",
+            )
+        }
 
-pub mod lisp_error;
+        ErrorWrapper(cause: Box<StdError + Send>) {
+            description(cause.description())
+            display(
+                "{}",
+                cause,
+            )
+        }
 
-pub mod lisp_result;
+        InvalidEscapeSequence(escaped_character: char) {
+            description("Error escaping character. The character cannot be escaped.")
+            display(
+                "{}{}{}",
+                "Error escaping character. The character, '",
+                escaped_character,
+                "', cannot be escaped.",
+            )
+        }
 
-pub mod multiple_characters_in_single_quotes;
+        InvalidExecutionTreeObjectConversion(actual: String, expected: String) {
+            description("Error converting from lisp execution tree object. The object is the incorrect type.")
+            display(
+                "{}{}{}{}{}",
+                "Error converting from lisp execution tree object. The expected type of the object is, '",
+                expected,
+                "', but the actual type of the object is, '",
+                actual,
+                "'.",
+            )
+        }
 
-pub mod no_character_in_single_quotes;
+        InvalidPreviousChar(character: char, index: usize, previous_char_type: LastCharType) {
+            description("Error parsing lisp. The current character cannot follow the previous character.")
+            display(
+                "{}{}{}{}{}{}{}",
+                "Error parsing lisp. The current character, '",
+                character,
+                "', at index, '",
+                index,
+                "', cannot follow the previous character which is type, '",
+                previous_char_type.enum_to_string(),
+                "'.",
+            )
+        }
 
-pub mod no_closing_double_quote;
+        MultipleCharactersInSingleQuotes(token: String) {
+            description("Error parsing lisp. Multiple characters found in single quotes in execution tree.")
+            display(
+                "{}{}{}",
+                "Error parsing lisp. Multiple characters found in single quotes for token, '",
+                token,
+                "', in execution tree.",
+            )
+        }
 
-pub mod no_closing_double_quote_in_execution_tree;
+        NoCharacterInSingleQuotes(token: String) {
+            description("Error parsing lisp. No character found in single quotes in execution tree.")
+            display(
+                "{}{}{}",
+                "Error parsing lisp. No character found in single quotes for token, '",
+                token,
+                "', in execution tree.",
+            )
+        }
 
-pub mod no_closing_parenthesis;
+        NoClosingDoubleQuoteInExecutionTree(token: String) {
+            description("Error parsing lisp. No closing double-quote found in execution tree.")
+            display(
+                "{}{}{}",
+                "Error parsing lisp. No closing double-quote found for token, '",
+                token,
+                "', in execution tree.",
+            )
+        }
 
-pub mod no_closing_single_quote;
+        NoClosingDoubleQuote(text: String) {
+            description("Error parsing lisp. No closing double-quote found.")
+            display(
+                "{}{}",
+                "Error parsing lisp. No closing double-quote found for program:\n",
+                text,
+            )
+        }
 
-pub mod no_closing_single_quote_in_execution_tree;
+        NoClosingParenthesis(text: String) {
+            description("Error parsing lisp. No closing parenthesis found.")
+            display(
+                "{}{}",
+                "Error parsing lisp. No closing parenthesis found for program:\n",
+                text,
+            )
+        }
 
-pub mod no_last_char;
+        NoClosingSingleQuoteInExecutionTree(token: String) {
+            description("Error parsing lisp. No closing single-quote found in execution tree.")
+            display(
+                "{}{}{}",
+                "Error parsing lisp. No closing single-quote found for token, '",
+                token,
+                "', in execution tree.",
+            )
+        }
 
-pub mod no_program_start_parenthesis;
+        NoClosingSingleQuote(text: String) {
+            description("Error parsing lisp. No closing single-quote found.")
+            display(
+                "{}{}",
+                "Error parsing lisp. No closing single-quote found for program:\n",
+                text,
+            )
+        }
 
-pub mod numeric_token_cannot_be_parsed;
+        NoLastChar(contents: String) {
+            description("Error converting string to lisp object. The string has no last char.")
+            display(
+                "{}{}{}",
+                "Error converting string to lisp object. The string, '",
+                contents,
+                "', has no last char.",
+            )
+        }
 
-pub mod symbol_not_on_stack;
+        NoProgramStartParenthesis(text: String) {
+            description("Error parsing lisp. Program does not start with parenthesis.")
+            display(
+                "{}{}",
+                "Error parsing lisp. Program does not start with parenthesis. Program text:\n",
+                text,
+            )
+        }
 
-pub use error::beginning_string_in_word::BeginningStringInWord;
+        NumericTokenCannotBeParsed(expected_type: String, token: String) {
+            description("Error parsing lisp. Numeric token cannot be parsed.")
+            display(
+                "{}{}{}{}{}",
+                "Error parsing lisp. Numeric token, '",
+                expected_type,
+                "', cannot be parsed as, '",
+                token,
+                "'.",
+            )
+        }
 
-pub use error::empty_escape_sequence::EmptyEscapeSequence;
-
-pub use error::empty_string_detected::EmptyStringDetected;
-
-pub use error::error_wrapper::ErrorWrapper;
-
-pub use error::invalid_escape_sequence::InvalidEscapeSequence;
-
-pub use error::invalid_execution_tree_object_conversion::InvalidExecutionTreeObjectConversion;
-
-pub use error::invalid_previous_char::InvalidPreviousChar;
-
-pub use error::lisp_error::LispError;
-
-pub use error::lisp_result::LispResult;
-
-pub use error::multiple_characters_in_single_quotes::MultipleCharactersInSingleQuotes;
-
-pub use error::no_character_in_single_quotes::NoCharacterInSingleQuotes;
-
-pub use error::no_closing_double_quote::NoClosingDoubleQuote;
-
-pub use error::no_closing_double_quote_in_execution_tree::NoClosingDoubleQuoteInExecutionTree;
-
-pub use error::no_closing_parenthesis::NoClosingParenthesis;
-
-pub use error::no_closing_single_quote::NoClosingSingleQuote;
-
-pub use error::no_closing_single_quote_in_execution_tree::NoClosingSingleQuoteInExecutionTree;
-
-pub use error::no_last_char::NoLastChar;
-
-pub use error::no_program_start_parenthesis::NoProgramStartParenthesis;
-
-pub use error::numeric_token_cannot_be_parsed::NumericTokenCannotBeParsed;
-
-pub use error::symbol_not_on_stack::SymbolNotOnStack;
+        SymbolNotOnStack(symbol: String) {
+            description("Error locating symbol. The symbol cannot be found on the stack.")
+            display(
+                "{}{}{}",
+                "Error locating symbol. The symbol, '",
+                symbol,
+                "', cannot be found on the stack.",
+            )
+        }
+    }
+}

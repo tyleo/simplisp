@@ -1,11 +1,4 @@
-use error::BeginningStringInWord;
-use error::InvalidPreviousChar;
-use error::LispError as E;
-use error::LispResult as R;
-use error::NoClosingDoubleQuote;
-use error::NoClosingParenthesis;
-use error::NoClosingSingleQuote;
-use error::NoProgramStartParenthesis;
+use error::*;
 use lisp::AbstractSyntaxTreeNode;
 use lisp::AbstractSyntaxTreeObject;
 use lisp::LastCharType;
@@ -15,7 +8,7 @@ pub struct AbstractSyntaxTree<'a> {
 }
 
 impl <'a> AbstractSyntaxTree<'a> {
-    pub fn new(program_text: &'a str) -> R<Self> {
+    pub fn new(program_text: &'a str) -> Result<Self> {
         let result =
             AbstractSyntaxTree {
                 root: try!(Self::parse_program_text(program_text)),
@@ -27,7 +20,7 @@ impl <'a> AbstractSyntaxTree<'a> {
         &self.root
     }
 
-    fn parse<TIterator>(enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeNode<'a>>
+    fn parse<TIterator>(enumerated_text: &mut TIterator, program_text: &'a str) -> Result<AbstractSyntaxTreeNode<'a>>
         where TIterator: Iterator<Item = (usize, char)> {
         let mut objects = Vec::new();
 
@@ -39,8 +32,7 @@ impl <'a> AbstractSyntaxTree<'a> {
                 '(' => {
                     match last_char_type {
                         LastCharType::Word | LastCharType::Quote => {
-                            let err = InvalidPreviousChar::new(character, index, last_char_type);
-                            return Err(E::from(err))
+                            return Err(ErrorKind::InvalidPreviousChar(character, index, last_char_type).into());
                         },
                         _ => { },
                     }
@@ -63,8 +55,7 @@ impl <'a> AbstractSyntaxTree<'a> {
                     } else {
                         match last_char_type {
                             LastCharType::CloseParen | LastCharType::Quote => {
-                                let err = InvalidPreviousChar::new(character, index, last_char_type);
-                                return Err(E::from(err));
+                                return Err(ErrorKind::InvalidPreviousChar(character, index, last_char_type).into());
                             },
                             _ => { },
                         }
@@ -73,8 +64,7 @@ impl <'a> AbstractSyntaxTree<'a> {
                             Some(_) => {
                                 match character {
                                     '"' | '\'' => {
-                                        let err = BeginningStringInWord::new(character, index);
-                                        return Err(E::from(err));
+                                        return Err(ErrorKind::BeginningStringInWord(character, index).into());
                                     },
                                     _ => { },
                                 }
@@ -105,11 +95,10 @@ impl <'a> AbstractSyntaxTree<'a> {
             }
         }
 
-        let err = NoClosingParenthesis::new(program_text.to_string());
-        return Err(E::from(err));
+        Err(ErrorKind::NoClosingParenthesis(program_text.to_string()).into())
     }
 
-    fn parse_double_quoted_text<TIterator>(start_index: usize, enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeObject<'a>>
+    fn parse_double_quoted_text<TIterator>(start_index: usize, enumerated_text: &mut TIterator, program_text: &'a str) -> Result<AbstractSyntaxTreeObject<'a>>
         where TIterator: Iterator<Item = (usize, char)> {
         let mut is_escaped = false;
 
@@ -126,14 +115,12 @@ impl <'a> AbstractSyntaxTree<'a> {
             }
         }
 
-        let err = NoClosingDoubleQuote::new(program_text.to_string());
-        return Err(E::from(err));
+        Err(ErrorKind::NoClosingDoubleQuote(program_text.to_string()).into())
     }
 
-    pub fn parse_program_text(program_text: &'a str) -> R<AbstractSyntaxTreeNode<'a>> {
+    pub fn parse_program_text(program_text: &'a str) -> Result<AbstractSyntaxTreeNode<'a>> {
         if program_text.as_bytes().get(0) != Some(&b'(') {
-            let err = NoProgramStartParenthesis::new(program_text.to_string());
-            Err(E::from(err))
+            Err(ErrorKind::NoProgramStartParenthesis(program_text.to_string()).into())
         } else {
             let mut enumerated_text = program_text.char_indices();
             enumerated_text.next();
@@ -142,7 +129,7 @@ impl <'a> AbstractSyntaxTree<'a> {
         }
     }
 
-    fn parse_single_quoted_text<TIterator>(start_index: usize, enumerated_text: &mut TIterator, program_text: &'a str) -> R<AbstractSyntaxTreeObject<'a>>
+    fn parse_single_quoted_text<TIterator>(start_index: usize, enumerated_text: &mut TIterator, program_text: &'a str) -> Result<AbstractSyntaxTreeObject<'a>>
         where TIterator: Iterator<Item = (usize, char)> {
         let mut is_escaped = false;
 
@@ -159,8 +146,7 @@ impl <'a> AbstractSyntaxTree<'a> {
             }
         }
 
-        let err = NoClosingSingleQuote::new(program_text.to_string());
-        return Err(E::from(err));
+        Err(ErrorKind::NoClosingSingleQuote(program_text.to_string()).into())
     }
 
     fn try_end_current_word(current_word_start_option: &mut Option<usize>, current_word_end: usize, objects: &mut Vec<AbstractSyntaxTreeObject<'a>>, program_text: &'a str) {

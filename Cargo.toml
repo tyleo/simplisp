@@ -1,5 +1,5 @@
 [dependencies]
-define_error = "4"
+error-chain = "0.4.2"
 
 [package]
 authors = ["Tyler Wolf Leonhardt <tyler.wolf.leonhardt@gmail.com>"]
