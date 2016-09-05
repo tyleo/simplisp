@@ -163,29 +163,29 @@ impl ExecutionTree {
         if let Some((last_five_index, _)) = string.char_indices().rev().take(5).nth(4) {
             let (first_chars, last_five_chars) = string.split_at(last_five_index);
 
-        match last_five_chars {
-            "isize" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::ISize(ok)),
-                    Err(_) => {
-                        Err(ErrorKind::NumericTokenCannotBeParsed(ExecutionTreeObject::isize_str().to_string(), string.to_string()).into())
-                    },
+            match last_five_chars {
+                "isize" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::ISize(ok)),
+                        Err(_) => {
+                            Err(ErrorKind::NumericTokenCannotBeParsed(ExecutionTreeObject::isize_str().to_string(), string.to_string()).into())
+                        },
+                    }
+                },
+                "usize" => {
+                    match first_chars.parse() {
+                        Ok(ok) => Ok(ExecutionTreeObject::USize(ok)),
+                        Err(_) => {
+                            Err(ErrorKind::NumericTokenCannotBeParsed(ExecutionTreeObject::usize_str().to_string(), string.to_string()).into())
+                        },
+                    }
+                },
+                _ => {
+                    Self::visit_four_char_number_string(string)
                 }
-            },
-            "usize" => {
-                match first_chars.parse() {
-                    Ok(ok) => Ok(ExecutionTreeObject::USize(ok)),
-                    Err(_) => {
-                        Err(ErrorKind::NumericTokenCannotBeParsed(ExecutionTreeObject::usize_str().to_string(), string.to_string()).into())
-                    },
-                }
-            },
-            _ => {
-                Self::visit_four_char_number_string(string)
             }
-        }
         } else {
-            panic!();
+            Err(ErrorKind::Msg("Error creating number from 6 or more characters. Could not find last 5 characters.".to_string()).into())
         }
     }
 
@@ -263,7 +263,7 @@ impl ExecutionTree {
             }
         }
         } else {
-            panic!();
+            Err(ErrorKind::Msg("Error creating number from 4 or more characters. Could not find last 3 characters.".to_string()).into())
         }
     }
 
@@ -293,7 +293,7 @@ impl ExecutionTree {
                 }
             }
         } else {
-            panic!();
+            Err(ErrorKind::Msg("Error creating number from 3 or more characters. Could not find last 2 characters.".to_string()).into())
         }
     }
 
