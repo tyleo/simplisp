@@ -4,7 +4,7 @@ use lisp::ExecutionTreeObject;
 
 pub enum Symbol<TArg> {
     Object(ExecutionTreeObject),
-    BuiltInFunc(unsafe fn(&TArg, &mut Environment<TArg>, Vec<ExecutionTreeObject>) -> Result<ExecutionTreeObject>),
+    BuiltInFunc(unsafe fn(&TArg, &mut Environment<TArg>, Vec<&ExecutionTreeObject>) -> Result<ExecutionTreeObject>),
 }
 
 impl <TArg> Clone for Symbol<TArg> {

@@ -19,19 +19,19 @@ impl <TArg> Environment<TArg> {
         }
     }
 
-    pub unsafe fn evaluate(&mut self, arg: &TArg, object: ExecutionTreeObject) -> Result<ExecutionTreeObject> {
+    pub unsafe fn evaluate(&mut self, arg: &TArg, object: &ExecutionTreeObject) -> Result<ExecutionTreeObject> {
         self.push_frame();
 
         let result =
             match object {
-                ExecutionTreeObject::Node(node) => {
-                    let inner_objects = node.into_objects();
+                &ExecutionTreeObject::Node(ref node) => {
+                    let inner_objects = node.get_objects();
                     let inner_objects_len = inner_objects.len();
                     if inner_objects_len > 1 {
                         self.evaluate_list(arg, inner_objects)
                     } else {
                         if let Some((first, _)) = Self::split(inner_objects.into_iter()) {
-                            self.evaluate(arg, first)
+                            self.evaluate(arg, &first)
                         } else {
                             let nil = ExecutionTreeObject::nil();
                             Ok(nil)
@@ -39,7 +39,7 @@ impl <TArg> Environment<TArg> {
                     }
                 },
 
-                ExecutionTreeObject::Symbol(symbol) => {
+                &ExecutionTreeObject::Symbol(ref symbol) => {
                     let symbol =
                         match self.global_frame.try_get(&symbol) {
                             Some(symbol) => symbol,
@@ -54,7 +54,7 @@ impl <TArg> Environment<TArg> {
                     }
                 }
 
-                other => Ok(other),
+                other => Ok(other.clone()),
             };
 
         self.pop_frame();
@@ -64,7 +64,7 @@ impl <TArg> Environment<TArg> {
     pub unsafe fn execute(&mut self, arg: &TArg, execution_tree: ExecutionTree) -> Result<String> {
         let execution_tree_root = execution_tree.into_root();
         let execution_tree_root_object = ExecutionTreeObject::Node(execution_tree_root);
-        let result = try!(self.evaluate(arg, execution_tree_root_object));
+        let result = try!(self.evaluate(arg, &execution_tree_root_object));
         result.to_string()
     }
 
@@ -104,14 +104,14 @@ impl <TArg> Environment<TArg> {
         self.call_stack.push(Frame::new());
     }
 
-    unsafe fn evaluate_list(&mut self, arg: &TArg, list: Vec<ExecutionTreeObject>) -> Result<ExecutionTreeObject> {
+    unsafe fn evaluate_list(&mut self, arg: &TArg, list: &Vec<ExecutionTreeObject>) -> Result<ExecutionTreeObject> {
         self.push_frame();
         let size = list.len();
 
         let result =
             if let Some((first, rest)) = Self::split(list.into_iter()) {
                 match first {
-                    ExecutionTreeObject::Symbol(symbol) => {
+                    &ExecutionTreeObject::Symbol(ref symbol) => {
                         let symbol =
                         match self.global_frame.try_get(&symbol) {
                             Some(symbol) => symbol,
@@ -126,7 +126,7 @@ impl <TArg> Environment<TArg> {
                                 let mut result = Vec::with_capacity(size);
                                 result.push(object);
                                 for object in rest {
-                                    result.push(try!(self.evaluate(arg, object)));
+                                    result.push(try!(self.evaluate(arg, &object)));
                                 }
                                 Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(result)))
                             },
@@ -135,9 +135,9 @@ impl <TArg> Environment<TArg> {
 
                     other => {
                         let mut result = Vec::with_capacity(size);
-                        result.push(try!(self.evaluate(arg, other)));
+                        result.push(try!(self.evaluate(arg, &other)));
                         for object in rest {
-                            result.push(try!(self.evaluate(arg, object)));
+                            result.push(try!(self.evaluate(arg, &object)));
                         }
                         Ok(ExecutionTreeObject::Node(ExecutionTreeNode::new(result)))
                     },
@@ -150,8 +150,8 @@ impl <TArg> Environment<TArg> {
         result
     }
 
-    fn split<TObjects>(mut objects: TObjects) -> Option<(ExecutionTreeObject, TObjects)>
-        where TObjects: Iterator<Item = ExecutionTreeObject> {
+    fn split<'a, TObjects>(mut objects: TObjects) -> Option<(&'a ExecutionTreeObject, TObjects)>
+        where TObjects: Iterator<Item = &'a ExecutionTreeObject> {
         if let Some(first) = objects.next() {
             Some((first, objects))
         } else {
