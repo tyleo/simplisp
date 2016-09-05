@@ -88,6 +88,14 @@ impl <TArg> Environment<TArg> {
         self.execute(arg, execution_tree)
     }
 
+    pub fn with_frame<T, TFn>(&mut self, frame: Frame<TArg>, func: TFn) -> T
+        where TFn: FnOnce(&mut Environment<TArg>) -> T {
+        self.call_stack.push(frame);
+        let result = func(self);
+        self.call_stack.pop();
+        result
+    }
+
     fn pop_frame(&mut self) {
         self.call_stack.pop();
     }
