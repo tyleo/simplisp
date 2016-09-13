@@ -1,6 +1,6 @@
-pub mod wrap_err;
+mod wrap_err;
 
-pub mod wrap_error;
+mod wrap_error;
 
 pub use error::wrap_err::WrapErr;
 
