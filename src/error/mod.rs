@@ -6,7 +6,7 @@ pub use error::wrap_err::WrapErr;
 
 pub use error::wrap_error::WrapError;
 
-use last_char_type::LastCharType;
+use lisp::LastCharType;
 use std::error::Error as StdError;
 
 error_chain! {

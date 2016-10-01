@@ -1,22 +1,22 @@
-pub mod abstract_syntax_tree;
+mod abstract_syntax_tree;
 
-pub mod abstract_syntax_tree_object;
+mod abstract_syntax_tree_object;
 
-pub mod abstract_syntax_tree_node;
+mod abstract_syntax_tree_node;
 
-pub mod environment;
+mod environment;
 
-pub mod execution_tree;
+mod execution_tree;
 
-pub mod execution_tree_node;
+mod execution_tree_node;
 
-pub mod execution_tree_object;
+mod execution_tree_object;
 
-pub mod frame;
+mod frame;
 
-pub mod last_char_type;
+mod last_char_type;
 
-pub mod symbol;
+mod symbol;
 
 pub use lisp::abstract_syntax_tree::AbstractSyntaxTree;
 
